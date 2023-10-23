@@ -67,7 +67,7 @@ const onInputPeopleName = (event:Event) => {
   </div>
   <PeopleLoading v-if="loading.isProgress" :loading="loading" />
   <MessageError v-else-if="error" :error="error" class="mx-auto" />
-  <div v-else class="overflow-x-auto">
+  <div v-else class="scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thin scrollbar-thumb-neutral-200 scrollbar-track-neutral-100 overflow-y-scroll">
     <PeopleTable :people="list!" @favorite="onPeopleTableFavorite" />
   </div>
 </template>

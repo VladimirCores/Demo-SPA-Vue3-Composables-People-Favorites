@@ -46,6 +46,7 @@ const fetchPeople = (
 
 let searchFetchController:AbortController | undefined;
 let peopleFetchController:AbortController | undefined;
+let personFetchController:AbortController | undefined;
 
 export function useSearch() {
   const result = ref<IPeopleResult | undefined>();
@@ -90,15 +91,35 @@ export function useSearch() {
 }
 
 export function useFavorite() {
-  const switchFavorite = (index:number) => {
-    if (!peopleResult?.results) return;
-    const item = peopleResult.results[index];
+  const switchFavorite = (index:number, data:IPerson | undefined) => {
+    const item = data || peopleResult?.results[index];
     console.log('> useFavorite -> switchFavorite:', item);
+    if (!item) return;
     item.favorite = !item.favorite;
     peopleFavorite[index] = item.favorite;
     localStorage.setItem(LocalKeys.FAVORITE, JSON.stringify(peopleFavorite));
   };
   return { switchFavorite };
+}
+
+export function usePerson() {
+  const fetchById = (id:number) => {
+    if (personFetchController) { personFetchController.abort(); }
+    personFetchController = new AbortController();
+
+    return fetch(
+      `${import.meta.env.VITE_URL_PEOPLE}/${id}`,
+      {signal: personFetchController.signal})
+      .then((resp) => resp.json())
+      .then((result) => (result.favorite = peopleFavorite[id], result));
+  };
+
+  onUnmounted(() => {
+    if (personFetchController) { personFetchController.abort(); }
+    personFetchController = undefined;
+  });
+
+  return { fetchById };
 }
 
 export function usePeople() {
