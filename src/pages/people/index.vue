@@ -3,12 +3,14 @@ import { computed } from 'vue';
 
 import { usePeople } from '~/composables';
 
-const { list: people, loading, switchFavorite } = usePeople();
+import MessageError from '~/components/MessageError.vue';
+
+const { list: people, error, loading, switchFavorite } = usePeople();
 const isLoadingInitial = computed(() => loading.progress.final < 0);
 const getLoadingText = computed(() => `Loading (${loading.progress.current}/${isLoadingInitial.value ? '?' : loading.progress.final})`);
 
 const onFavorite = (event:Event) => {
-  const index = parseInt((event!.currentTarget as HTMLInputElement).dataset.index);
+  const index = parseInt((event!.currentTarget as HTMLInputElement).dataset.index!);
   console.log('> PeoplePage -> onFavorite:', index);
   switchFavorite(index);
 };
@@ -29,6 +31,9 @@ const onFavorite = (event:Event) => {
         {{ getLoadingText }}
       </span>
     </div>
+  </div>
+  <div v-else-if="error">
+    <MessageError :error="error" class="mx-auto" />
   </div>
   <div v-else class="overflow-x-auto">
     <table class="table table-sm table-pin-rows">

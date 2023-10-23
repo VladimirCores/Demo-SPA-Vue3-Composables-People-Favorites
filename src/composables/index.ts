@@ -19,7 +19,6 @@ const fetchPeople = (onProgress:(data:IPeopleResult) => void) =>
           const lastIndex = peopleResult?.results.length || 0;
           result.results.forEach((item, index) => {
             item.favorite = !!peopleFavorite[lastIndex + index];
-            // console.log('item.favorite', item.favorite);
           });
           if (!peopleResult) {
             peopleResult = result as IPeopleResult;
@@ -56,7 +55,7 @@ export function usePeople() {
         .then(() => {
           list.value = peopleResult?.results;
         })
-        .catch((errorText) => error.value = errorText)
+        .catch((err) => error.value = err)
         .finally(() => {
           loading.isProgress = false;
         });
