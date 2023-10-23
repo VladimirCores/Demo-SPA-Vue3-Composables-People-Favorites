@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
+
 import { useFavorite, usePeople, useSearch } from '~/composables';
 
 import routes from '~/constants/routes.ts';
@@ -7,6 +9,7 @@ import MessageError from '~/components/message/MessageError.vue';
 import PeopleLoading from '~/components/pages/people/PeopleLoading.vue';
 import PeopleTable from '~/components/pages/people/PeopleTable.vue';
 
+const router = useRouter();
 const { list, error, loading } = usePeople();
 const { switchFavorite } = useFavorite();
 const { search, result: searchResult, loading: searchLoading, error: searchError } = useSearch();
@@ -18,7 +21,10 @@ const onPeopleTableFavorite = (index:number) => {
 const onInputPeopleName = (event:Event) => {
   const domInput =  event.currentTarget as HTMLInputElement;
   console.log('> PeoplePage -> onInputPeopleName:', domInput.value);
-  search(domInput.value);
+  const value = domInput.value;
+  const query = value.length > 0 ? { search: value } : undefined;
+  router.replace({ ...router.currentRoute.value, query });
+  search(value);
 };
 </script>
 

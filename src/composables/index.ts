@@ -1,4 +1,4 @@
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 
 import { IPeopleLoading, IPeopleResult, IPerson } from '~/interfaces';
 
@@ -9,24 +9,66 @@ import { debounce } from '~/utils/utilsTimer.ts';
 let peopleResult:IPeopleResult | undefined;
 const peopleFavorite:boolean[] = JSON.parse(localStorage.getItem(LocalKeys.FAVORITE) || '[]');
 
+const fetchPeople = (
+  url: string,
+  controller: AbortController,
+  onProgress?: (data:IPeopleResult) => void,
+):Promise<IPeopleResult | undefined> => {
+  let finalResult:IPeopleResult | undefined;
+  return new Promise((resolve, reject) => {
+    const getPage = (url:string):Promise<IPeopleResult | undefined> =>
+      fetch(url, {signal: controller.signal})
+        .then((res) => {
+          if (!res.ok) throw new Error(res.statusText);
+          return res.json() as Promise<IPeopleResult>;
+        })
+        .then((result:IPeopleResult) => {
+          const lastIndex = finalResult?.results.length || 0;
+          result.results.forEach((item, index) => {
+            item.favorite = !!peopleFavorite[lastIndex + index];
+            // console.log('item.favorite', item.favorite);
+          });
+          if (!finalResult) {
+            finalResult = result as IPeopleResult;
+          } else {
+            finalResult.next = result.next;
+            finalResult.results.push(...result.results);
+          }
+          if (onProgress) onProgress(result);
+          if (result.next) return getPage(result.next);
+          else return finalResult;
+        });
+    getPage(url)
+      .then(resolve)
+      .catch((error) => error.code !== 20 && reject(error) || resolve(undefined)); // name === 'AbortError'
+  });
+};
+
+let searchFetchController:AbortController | undefined;
+let peopleFetchController:AbortController | undefined;
+
 export function useSearch() {
   const result = ref<IPeopleResult | undefined>();
   const error = ref(null);
   const loading = ref<boolean>(false);
 
-  let controller:AbortController | undefined;
+  searchFetchController = undefined;
 
   const search =  debounce((text:unknown) => {
     console.log('> useSearch -> text:', text);
-    if (controller) { controller.abort(); }
-    controller = new AbortController();
-    loading.value = true;
+    if (searchFetchController) { searchFetchController.abort(); }
+    searchFetchController = new AbortController();
     result.value = undefined;
-    const path = `${import.meta.env.VITE_URL_PEOPLE}/?search=${text}`;
-    fetch(path, {signal: controller.signal})
-      .then((resp) => resp.json())
+    error.value = null;
+    if ((text as string).length === 0) return;
+    loading.value = true;
+    fetchPeople(
+      `${import.meta.env.VITE_URL_PEOPLE}/?search=${text}`,
+      searchFetchController,
+    )
       .then((data) => {
         console.log('> useSearch -> data:', data);
+        if (!data) return;
         const cutFrom = import.meta.env.VITE_URL_PEOPLE.length;
         data.results?.forEach((item:IPerson) => {
           item.id = item.url.substring(cutFrom);
@@ -34,10 +76,15 @@ export function useSearch() {
           return item;
         });
         result.value = data;
+        loading.value = false;
+        searchFetchController = undefined;
       })
-      .catch((err) => error.value = err)
-      .finally(() => loading.value = false);
+      .catch((err) => error.value = err);
   }, 1000);
+
+  onUnmounted(() => {
+    if (searchFetchController) { searchFetchController.abort(); }
+  });
 
   return { result, error, loading, search };
 }
@@ -65,42 +112,34 @@ export function usePeople() {
     },
   });
 
+  peopleFetchController = undefined;
+
   onMounted(() => {
     console.log('> usePeople -> onMounted: isLoading.value =', loading.isProgress);
     if (loading.isProgress) {
-      new Promise((resolve, reject) => {
-        const getPage = (path:string):Promise<void> =>
-          fetch(path)
-            .then((res) => {
-              if (!res.ok) throw new Error(res.statusText);
-              return res.json() as Promise<IPeopleResult>;
-            })
-            .then((result:IPeopleResult) => {
-              const lastIndex = peopleResult?.results.length || 0;
-              result.results.forEach((item, index) => {
-                item.favorite = !!peopleFavorite[lastIndex + index];
-              });
-              if (!peopleResult) {
-                peopleResult = result as IPeopleResult;
-              } else {
-                peopleResult.next = result.next;
-                peopleResult.results.push(...result.results);
-              }
-              loading.progress.current += 1;
-              loading.progress.final = Math.ceil(result.count / result.results.length);
-              // if (result.next) return getPage(result.next);
-            });
-        getPage(import.meta.env.VITE_URL_PEOPLE)
-          .then(resolve)
-          .catch(reject);
-      })
-        .then(() => {
-          list.value = peopleResult?.results;
-        })
+      if (peopleFetchController) { peopleFetchController.abort(); }
+      peopleFetchController = new AbortController();
+      fetchPeople(
+        import.meta.env.VITE_URL_PEOPLE,
+        peopleFetchController,
+        (result) => {
+          loading.progress.current += 1;
+          loading.progress.final = Math.ceil(result.count / result.results.length);
+        },
+      )
+        .then((result) => { peopleResult = result; })
+        .then(() => list.value = peopleResult?.results)
         .catch((err) => error.value = err)
         .finally(() => {
           loading.isProgress = false;
+          peopleFetchController = undefined;
         });
+    }
+  });
+
+  onUnmounted(() => {
+    if (peopleFetchController) {
+      peopleFetchController.abort();
     }
   });
 
