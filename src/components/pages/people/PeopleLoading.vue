@@ -12,7 +12,7 @@ const getLoadingText = computed(() => `Loading (${props.loading.progress.current
 </script>
 
 <template>
-  <div class="w-56">
+  <div class="w-72">
     <progress v-if="isLoadingInitial" class="progress" />
     <progress
       v-else

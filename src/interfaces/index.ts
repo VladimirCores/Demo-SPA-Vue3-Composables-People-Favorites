@@ -1,4 +1,5 @@
 export interface IPerson {
+  id: string | undefined
   name: string
   height: string
   mass: string

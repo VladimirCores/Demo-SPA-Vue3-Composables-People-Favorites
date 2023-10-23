@@ -1,28 +1,57 @@
 <script setup lang="ts">
-import { usePeople } from '~/composables';
+import { useFavorite, usePeople, useSearch } from '~/composables';
+
+import routes from '~/constants/routes.ts';
 
 import MessageError from '~/components/message/MessageError.vue';
 import PeopleLoading from '~/components/pages/people/PeopleLoading.vue';
 import PeopleTable from '~/components/pages/people/PeopleTable.vue';
 
-const { list, error, loading, switchFavorite } = usePeople();
+const { list, error, loading } = usePeople();
+const { switchFavorite } = useFavorite();
+const { search, result: searchResult, loading: searchLoading, error: searchError } = useSearch();
 
-const onFavorite = (index:number) => {
+const onPeopleTableFavorite = (index:number) => {
   console.log('> PeoplePage -> onFavorite:', index);
   switchFavorite(index);
+};
+const onInputPeopleName = (event:Event) => {
+  const domInput =  event.currentTarget as HTMLInputElement;
+  console.log('> PeoplePage -> onInputPeopleName:', domInput.value);
+  search(domInput.value);
 };
 </script>
 
 <template>
   <div class="pb-4">
-    <div class="dropdown dropdown-end w-full">
-      <input type="text" placeholder="Type people name here" class="input input-bordered input-sm w-full max-w-xs">
-      <div tabindex="0" class="card compact dropdown-content z-[10] shadow bg-base-100 rounded-box w-full">
+    <div class="dropdown dropdown-end w-72">
+      <input
+        type="text"
+        placeholder="Type people name here"
+        class="input input-bordered input-sm w-full max-w-xs"
+        @input="onInputPeopleName"
+      >
+      <div tabindex="0" class="card compact dropdown-content z-[10] shadow bg-base-100 rounded-box w-full mt-1 border">
         <div class="card-body">
           <span class="card-title text-sm">
             Type to search people?
           </span>
-          <p>Nothing here!</p>
+          <div v-if="searchLoading" class="flex flex-row items-center space-x-2">
+            <span class="loading loading-spinner loading-xs text-accent" />
+            <span class="text-xs">
+              Loading...
+            </span>
+          </div>
+          <MessageError v-else-if="searchError" :error="searchError" />
+          <div v-else-if="searchResult">
+            <ul class="menu bg-base-200 rounded-box">
+              <li v-for="(item, index) in searchResult.results" :key="index">
+                <router-link :to="`${routes.PEOPLE.path}${item.id}`">
+                  {{ item.name }}
+                </router-link>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -33,6 +62,6 @@ const onFavorite = (index:number) => {
   <PeopleLoading v-if="loading.isProgress" :loading="loading" />
   <MessageError v-else-if="error" :error="error" class="mx-auto" />
   <div v-else class="overflow-x-auto">
-    <PeopleTable :people="list!" @favorite="onFavorite" />
+    <PeopleTable :people="list!" @favorite="onPeopleTableFavorite" />
   </div>
 </template>

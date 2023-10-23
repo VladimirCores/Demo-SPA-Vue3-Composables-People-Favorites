@@ -4,7 +4,7 @@ import HeaderNavigation from '~/components/HeaderNavigation.vue';
 </script>
 
 <template>
-  <div class="flex flex-col items-center container">
+  <div class="flex flex-col items-center container mx-auto">
     <div class="py-4">
       <HeaderNavigation />
     </div>
