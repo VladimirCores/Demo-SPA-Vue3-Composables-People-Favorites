@@ -61,12 +61,6 @@ module.exports = {
     "function-paren-newline": 0,
     "linebreak-style": 0,
     "func-names": 0,
-    "import/no-extraneous-dependencies": ["error", {
-      "devDependencies": false,
-      "optionalDependencies": false,
-      "peerDependencies": false,
-      "packageDir": "./"
-    }],
     "import/no-unresolved": 0,
     "import/prefer-default-export": 0,
     "no-param-reassign": [2, { "props": false }],
