@@ -2,7 +2,10 @@ import { onMounted, reactive, ref } from 'vue';
 
 import { IPeopleLoading, IPeopleResult, IPerson } from '~/interfaces';
 
-let state:IPeopleResult | undefined;
+import LocalKeys from '~/constants/localkeys.ts';
+
+let peopleResult:IPeopleResult | undefined;
+const peopleFavorite:boolean[] = JSON.parse(localStorage.getItem(LocalKeys.FAVORITE) || '[]');
 
 const fetchPeople = (onProgress:(data:IPeopleResult) => void) =>
   new Promise((resolve, reject) => {
@@ -13,14 +16,19 @@ const fetchPeople = (onProgress:(data:IPeopleResult) => void) =>
           return res.json() as Promise<IPeopleResult>;
         })
         .then((result:IPeopleResult) => {
-          if (!state) {
-            state = result as IPeopleResult;
+          const lastIndex = peopleResult?.results.length || 0;
+          result.results.forEach((item, index) => {
+            item.favorite = !!peopleFavorite[lastIndex + index];
+            // console.log('item.favorite', item.favorite);
+          });
+          if (!peopleResult) {
+            peopleResult = result as IPeopleResult;
           } else {
-            state.next = result.next;
-            state.results.push(...result.results);
+            peopleResult.next = result.next;
+            peopleResult.results.push(...result.results);
           }
           onProgress(result);
-          // if (state.next) return getPage(state.next);
+          // if (result.next) return getPage(result.next);
         });
     getPage('https://swapi.dev/api/people')
       .then(resolve)
@@ -28,7 +36,7 @@ const fetchPeople = (onProgress:(data:IPeopleResult) => void) =>
 });
 
 export function usePeople() {
-  const list = ref<IPerson[] | undefined>(state?.results);
+  const list = ref<IPerson[] | undefined>(peopleResult?.results);
   const error = ref(null);
   const loading = reactive<IPeopleLoading>({
     isProgress: (list.value?.length || 0) === 0,
@@ -46,7 +54,7 @@ export function usePeople() {
         loading.progress.final = Math.ceil(result.count / result.results.length);
       })
         .then(() => {
-          list.value = state?.results;
+          list.value = peopleResult?.results;
         })
         .catch((errorText) => error.value = errorText)
         .finally(() => {
@@ -55,5 +63,14 @@ export function usePeople() {
     }
   });
 
-  return { list, error, loading };
+  const switchFavorite = (index:number) => {
+    if (!list.value) return;
+    const item = list.value[index];
+    console.log('> usePeople -> switchFavorite:', item);
+    item.favorite = !item.favorite;
+    peopleFavorite[index] = item.favorite;
+    localStorage.setItem(LocalKeys.FAVORITE, JSON.stringify(peopleFavorite));
+  };
+
+  return { list, error, loading, switchFavorite };
 }

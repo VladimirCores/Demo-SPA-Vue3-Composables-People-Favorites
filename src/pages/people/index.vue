@@ -3,13 +3,14 @@ import { computed } from 'vue';
 
 import { usePeople } from '~/composables';
 
-const { list: people, loading } = usePeople();
+const { list: people, loading, switchFavorite } = usePeople();
 const isLoadingInitial = computed(() => loading.progress.final < 0);
 const getLoadingText = computed(() => `Loading (${loading.progress.current}/${isLoadingInitial.value ? '?' : loading.progress.final})`);
 
 const onFavorite = (event:Event) => {
-  const index = (event!.currentTarget as HTMLInputElement).dataset.index;
+  const index = parseInt((event!.currentTarget as HTMLInputElement).dataset.index);
   console.log('> PeoplePage -> onFavorite:', index);
+  switchFavorite(index);
 };
 </script>
 
@@ -54,6 +55,7 @@ const onFavorite = (event:Event) => {
                 :data-index="index"
                 type="checkbox"
                 class="checkbox checkbox-sm"
+                :checked="item.favorite"
                 @change="onFavorite"
               >
             </label>
