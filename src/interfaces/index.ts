@@ -15,6 +15,7 @@ export interface IPerson {
   created: string
   edited: string
   url: string
+  favorite: boolean | undefined
 }
 
 export interface IPeopleResult {

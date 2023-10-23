@@ -20,7 +20,7 @@ const fetchPeople = (onProgress:(data:IPeopleResult) => void) =>
             state.results.push(...result.results);
           }
           onProgress(result);
-          if (state.next) return getPage(state.next);
+          // if (state.next) return getPage(state.next);
         });
     getPage('https://swapi.dev/api/people')
       .then(resolve)

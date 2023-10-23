@@ -5,7 +5,9 @@ import HeaderNavigation from '~/components/HeaderNavigation.vue';
 
 <template>
   <div class="flex flex-col items-center">
-    <HeaderNavigation />
+    <div class="py-4">
+      <HeaderNavigation />
+    </div>
     <router-view />
   </div>
 </template>
