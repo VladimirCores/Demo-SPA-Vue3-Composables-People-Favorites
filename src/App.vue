@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import MainNavigation from '~/components/MainNavigation.vue';
+import HeaderNavigation from '~/components/HeaderNavigation.vue';
 
 </script>
 
 <template>
   <div class="flex flex-col items-center">
-    <MainNavigation />
+    <HeaderNavigation />
     <router-view />
   </div>
 </template>

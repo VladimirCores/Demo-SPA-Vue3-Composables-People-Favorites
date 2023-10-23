@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-const people = ref('People');
+const welcome = ref('Welcome');
 </script>
 
 <template>
-  Hello {{ people }}
+  {{ welcome }}
 </template>
