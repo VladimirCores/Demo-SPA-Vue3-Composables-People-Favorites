@@ -30,7 +30,7 @@ const fetchPeople = (onProgress:(data:IPeopleResult) => void) =>
           onProgress(result);
           // if (result.next) return getPage(result.next);
         });
-    getPage('https://swapi.dev/api/people')
+    getPage(import.meta.env.VITE_URL_PEOPLE)
       .then(resolve)
       .catch(reject);
 });
