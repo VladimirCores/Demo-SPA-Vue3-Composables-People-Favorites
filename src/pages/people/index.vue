@@ -11,7 +11,7 @@ import PeopleLoading from '~/components/pages/people/PeopleLoading.vue';
 import PeopleTable from '~/components/pages/people/PeopleTable.vue';
 
 const router = useRouter();
-const { list, error, loading } = usePeople();
+const { list, error, loading, fetchPeople } = usePeople();
 const { switchFavorite } = useFavorites();
 const { search, result: searchResult, loading: searchLoading, error: searchError } = useSearch();
 
@@ -36,6 +36,10 @@ onMounted(() => {
   if (searchText.length > 0 && domInputName.value) {
     domInputName.value!.value = searchText;
     search(searchText);
+  }
+  if (!list.value && !loading.isProgress) {
+    console.log('> PeoplePage -> fetchPeople');
+    fetchPeople();
   }
 });
 

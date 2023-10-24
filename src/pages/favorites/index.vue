@@ -14,5 +14,8 @@ const onFavorite = (index:number) => {
 </script>
 
 <template>
-  <PeopleTable :people="favoriteList" @favorite="onFavorite" />
+  <div v-if="favoriteList.length === 0">
+    <span class="text-xl font-bold">Nothing in favorites</span>
+  </div>
+  <PeopleTable v-else :people="favoriteList" @favorite="onFavorite" />
 </template>

@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { reactive, ref } from 'vue';
 
 import { IPeopleLoading, IPerson } from '~/interfaces';
 
@@ -9,6 +9,16 @@ const server = useServer();
 
 let peopleFetchController:AbortController | undefined;
 
+const loading:IPeopleLoading = reactive<IPeopleLoading>({
+  isProgress: false,
+  progress: {
+    current: 1,
+    final: -1,
+  },
+});
+
+// const loading = reactive<IPeopleLoading>();
+
 const getPersonIdFromUrl = (url:string) => {
   const parts = url.split('/');
   return parseInt(parts[parts.length - 2]);
@@ -17,52 +27,38 @@ const getPersonIdFromUrl = (url:string) => {
 export default () => {
   const list = ref<IPerson[] | undefined>(peopleState.data?.results);
   const error = ref(null);
-  const loading = reactive<IPeopleLoading>({
-    isProgress: (list.value?.length || 0) === 0,
-    progress: {
-      current: 1,
-      final: -1,
-    },
-  });
 
   peopleFetchController = undefined;
 
-  onMounted(() => {
+  const fetchPeople = () => {
     console.log('> usePeople -> onMounted: isLoading.value =', loading.isProgress);
-    if (loading.isProgress) {
-      if (peopleFetchController) { peopleFetchController.abort(); }
-      peopleFetchController = new AbortController();
-      server.fetchPages(
-        import.meta.env.VITE_URL_PEOPLE,
-        peopleFetchController,
-        (pageResult, finalResult) => {
-          console.log('> usePeople -> fetchPages - onProgress =', pageResult, peopleState.favorites);
-          const lastIndex = finalResult?.results?.length || 0;
-          pageResult.results.forEach((item, index) => {
-            item.position = lastIndex + index;
-            item.id = getPersonIdFromUrl(item.url);
-            item.favorite = peopleState.favorites[item.id];
-            // console.log('\t' + item.name + ' position =', position, '|', item.id);
-          });
-          loading.progress.current += 1;
-          loading.progress.final = Math.ceil(pageResult.count / pageResult.results.length);
-        },
-      )
-        .then((result) => { peopleState.data = result; })
-        .then(() => list.value = peopleState.data?.results)
-        .catch((err) => error.value = err)
-        .finally(() => {
-          loading.isProgress = false;
-          peopleFetchController = undefined;
+    if (peopleFetchController) { peopleFetchController.abort(); }
+    peopleFetchController = new AbortController();
+    loading.isProgress = true;
+    server.fetchPages(
+      import.meta.env.VITE_URL_PEOPLE,
+      peopleFetchController,
+      (pageResult, finalResult) => {
+        console.log('> usePeople -> fetchPages - onProgress =', pageResult, peopleState.favorites);
+        const lastIndex = finalResult?.results?.length || 0;
+        pageResult.results.forEach((item, index) => {
+          item.position = lastIndex + index;
+          item.id = getPersonIdFromUrl(item.url);
+          item.favorite = peopleState.favorites[item.id];
+          // console.log('\t' + item.name + ' position =', position, '|', item.id);
         });
-    }
-  });
+        loading.progress.current += 1;
+        loading.progress.final = Math.ceil(pageResult.count / pageResult.results.length);
+      },
+    )
+      .then((result) => { peopleState.data = result; })
+      .then(() => list.value = peopleState.data?.results)
+      .catch((err) => error.value = err)
+      .finally(() => {
+        loading.isProgress = false;
+        peopleFetchController = undefined;
+      });
+  };
 
-  onUnmounted(() => {
-    if (peopleFetchController) {
-      peopleFetchController.abort();
-    }
-  });
-
-  return { list, error, loading };
+  return { list, error, loading, fetchPeople };
 };
