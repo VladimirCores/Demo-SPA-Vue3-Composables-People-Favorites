@@ -1,3 +1,8 @@
+export interface IPeopleState {
+  data: IPeopleData | undefined;
+  favorites: boolean[];
+}
+
 export interface IPerson {
   id?: number
   position?: number
@@ -20,7 +25,7 @@ export interface IPerson {
   favorite?: boolean
 }
 
-export interface IPeopleResult {
+export interface IPeopleData {
   count: number
   next: string | null
   previous: string | null

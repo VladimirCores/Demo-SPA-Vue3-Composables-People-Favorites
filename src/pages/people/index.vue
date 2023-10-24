@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { useFavorites, usePeople, useSearch } from '~/composables';
@@ -14,28 +15,40 @@ const { list, error, loading } = usePeople();
 const { switchFavorite } = useFavorites();
 const { search, result: searchResult, loading: searchLoading, error: searchError } = useSearch();
 
+const domInputName = ref<HTMLInputElement | null>(null);
+
 const onPeopleTableFavorite = (index:number) => {
   console.log('> PeoplePage -> onFavorite:', index);
   switchFavorite(index);
 };
-const onInputPeopleName = (event:Event) => {
-  const domInput =  event.currentTarget as HTMLInputElement;
+const onInputName = () => {
+  const domInput =  domInputName.value as HTMLInputElement;
   console.log('> PeoplePage -> onInputPeopleName:', domInput.value);
   const value = domInput.value;
   const query = value.length > 0 ? { search: value } : undefined;
   router.replace({ ...router.currentRoute.value, query });
-  search(value);
+
 };
+
+onMounted(() => {
+  const searchText = router.currentRoute.value.query.search?.toString() || '';
+  if (searchText.length > 0 && domInputName.value) {
+    domInputName.value!.value = searchText;
+    search(searchText);
+  }
+});
+
 </script>
 
 <template>
   <div class="pb-4">
     <div class="dropdown dropdown-end w-72">
       <input
+        ref="domInputName"
         type="text"
         placeholder="Type people name here"
         class="input input-bordered input-sm w-full max-w-xs"
-        @input="onInputPeopleName"
+        @input="onInputName"
       >
       <div tabindex="0" class="card compact dropdown-content z-[10] shadow bg-base-100 rounded-box w-full mt-1 border">
         <div class="card-body">

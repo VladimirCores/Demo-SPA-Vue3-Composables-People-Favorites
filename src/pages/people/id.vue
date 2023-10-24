@@ -14,7 +14,7 @@ const isLoading = ref(true);
 const error = ref<string | object | undefined>();
 const personData = ref<IPerson | undefined>();
 
-const getPersonId = computed<number>(() => parseInt(route.params.id as string) - 1);
+const getPersonId = computed<number>(() => parseInt(route.params.id as string));
 const getPersonKeys = computed<string[]>(() => Object.keys(personData.value!));
 const getPersonValue = (key:keyof IPerson) => personData.value![key];
 
