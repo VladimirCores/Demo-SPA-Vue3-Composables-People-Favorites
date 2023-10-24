@@ -18,8 +18,9 @@ const { search, result: searchResult, loading: searchLoading, error: searchError
 const domInputName = ref<HTMLInputElement | null>(null);
 
 const onPeopleTableFavorite = (index:number) => {
-  console.log('> PeoplePage -> onFavorite:', index);
-  switchFavorite(index);
+  const person = list.value![index];
+  console.log('> PeoplePage -> onFavorite:', person);
+  switchFavorite(person);
 };
 const onInputName = () => {
   const domInput =  domInputName.value as HTMLInputElement;

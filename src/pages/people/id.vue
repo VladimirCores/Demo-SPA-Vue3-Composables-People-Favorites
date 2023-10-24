@@ -23,7 +23,8 @@ const fetchPerson = () => {
     error.value = 'Wrong ID';
   } else {
     console.log('> PersonIdPage -> fetchPerson');
-    person.fetchById(getPersonId.value)
+    const id = getPersonId.value;
+    person.fetchById(id)
       .then((result) => personData.value = result)
       .catch((err) => error.value = err.toString())
       .finally(() => isLoading.value = false);
@@ -31,8 +32,9 @@ const fetchPerson = () => {
 };
 
 const onFavorite = () => {
-  console.log('> PersonIdPage -> onFavorite');
-  switchFavorite(getPersonId.value, personData.value);
+  const person = personData.value!;
+  console.log('> PersonIdPage -> onFavorite', person);
+  switchFavorite(person);
 };
 
 onMounted(() => {

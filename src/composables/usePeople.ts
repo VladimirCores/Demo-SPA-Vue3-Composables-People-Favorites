@@ -36,14 +36,13 @@ export default () => {
         import.meta.env.VITE_URL_PEOPLE,
         peopleFetchController,
         (pageResult, finalResult) => {
-          console.log('> usePeople -> fetchPages - onProgress =', pageResult);
+          console.log('> usePeople -> fetchPages - onProgress =', pageResult, peopleState.favorites);
           const lastIndex = finalResult?.results?.length || 0;
           pageResult.results.forEach((item, index) => {
-            const position = lastIndex + index;
-            item.position = position;
-            item.favorite = peopleState.favorites[position];
+            item.position = lastIndex + index;
             item.id = getPersonIdFromUrl(item.url);
-            console.log('\t' + item.name + ' position =', position, '|', item.id);
+            item.favorite = peopleState.favorites[item.id];
+            // console.log('\t' + item.name + ' position =', position, '|', item.id);
           });
           loading.progress.current += 1;
           loading.progress.final = Math.ceil(pageResult.count / pageResult.results.length);

@@ -15,7 +15,11 @@ export default () => {
       `${import.meta.env.VITE_URL_PEOPLE}/${id}`,
       {signal: personFetchController.signal})
       .then((resp) => resp.json())
-      .then((result) => (result.favorite = favorites[id], result))
+      .then((result) => {
+        result.favorite = favorites[id];
+        result.id = id;
+        return result;
+      })
       .then((result) => (personFetchController = undefined, result));
   };
 

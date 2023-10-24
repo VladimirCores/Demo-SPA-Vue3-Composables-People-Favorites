@@ -26,16 +26,14 @@ export default () => {
 
   console.log('> useFavorite -> list:', list.value);
 
-  const switchFavorite = (index:number, inputPerson?:IPerson) => {
-    const person = getPersonFromLocalStorage(index) || inputPerson;
-    console.log('> useFavorite -> switchFavorite:', index, person);
-    if (!person) return;
+  const switchFavorite = (person:IPerson) => {
+    console.log('> useFavorite -> switchFavorite:', person);
     const wasFavorite = person.favorite;
     console.log('> \t wasFavorite =', wasFavorite);
     person.favorite = !wasFavorite;
-    peopleFavorites[index] = person.favorite;
+    peopleFavorites[person.id!] = !wasFavorite;
     localStorage.setItem(LocalKeys.FAVORITE, JSON.stringify(peopleFavorites));
-    const itemLocalKey = getFavoriteItemLocalKey(index);
+    const itemLocalKey = getFavoriteItemLocalKey(person.id!);
     if (wasFavorite) {
       localStorage.removeItem(itemLocalKey);
     } else {
