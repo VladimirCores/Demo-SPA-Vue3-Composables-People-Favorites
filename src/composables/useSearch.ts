@@ -12,8 +12,8 @@ const server = useServer();
 let searchFetchController:AbortController | undefined;
 
 export default () => {
-  const result = ref<IPeopleData | undefined>();
-  const error = ref(null);
+  const data = ref<IPeopleData | undefined>();
+  const error = ref(undefined);
   const loading = ref<boolean>(false);
 
   searchFetchController = undefined;
@@ -22,8 +22,8 @@ export default () => {
     console.log('> useSearch -> text:', text);
     if (searchFetchController) { searchFetchController.abort(); }
     searchFetchController = new AbortController();
-    result.value = undefined;
-    error.value = null;
+    data.value = undefined;
+    error.value = undefined;
     if ((text as string).length === 0) return;
     loading.value = true;
     server.fetchPages(
@@ -35,7 +35,7 @@ export default () => {
         if (!finalResult) return;
         const { results } = finalResult;
         if (results) setupPersonsID(results);
-        result.value = finalResult;
+        data.value = finalResult;
         loading.value = false;
         searchFetchController = undefined;
       })
@@ -46,5 +46,5 @@ export default () => {
     if (searchFetchController) { searchFetchController.abort(); }
   });
 
-  return { result, error, loading, search };
+  return { data, error, loading, search };
 };

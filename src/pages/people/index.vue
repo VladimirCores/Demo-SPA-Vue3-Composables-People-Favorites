@@ -4,16 +4,15 @@ import { useRouter } from 'vue-router';
 
 import { useFavorites, usePeople, useSearch } from '~/composables';
 
-import routes from '~/constants/routes.ts';
-
 import MessageError from '~/components/message/MessageError.vue';
 import PeopleLoading from '~/components/pages/people/PeopleLoading.vue';
+import PeopleSearch from '~/components/pages/people/PeopleSearch.vue';
 import PeopleTable from '~/components/pages/people/PeopleTable.vue';
 
 const router = useRouter();
 const { list, error, loading, fetchPeople } = usePeople();
 const { switchFavorite } = useFavorites();
-const { search, result: searchResult, loading: searchLoading, error: searchError } = useSearch();
+const { search, data: searchData, loading: searchLoading, error: searchError } = useSearch();
 
 const domInputName = ref<HTMLInputElement | null>(null);
 
@@ -22,13 +21,11 @@ const onPeopleTableFavorite = (index:number) => {
   console.log('> PeoplePage -> onFavorite:', person);
   switchFavorite(person);
 };
-const onInputName = () => {
-  const domInput =  domInputName.value as HTMLInputElement;
-  console.log('> PeoplePage -> onInputPeopleName:', domInput.value);
-  const value = domInput.value;
-  const query = value.length > 0 ? { search: value } : undefined;
+const onSearch = (text:string) => {
+  console.log('> PeoplePage -> onSearch:', text);
+  const query = text.length > 0 ? { search: text } : undefined;
   router.replace({ ...router.currentRoute.value, query });
-  search(value);
+  search(text);
 };
 
 onMounted(() => {
@@ -47,38 +44,12 @@ onMounted(() => {
 
 <template>
   <div class="pb-4">
-    <div class="dropdown dropdown-end w-72">
-      <input
-        ref="domInputName"
-        type="text"
-        placeholder="Type people name here"
-        class="input input-bordered input-sm w-full max-w-xs"
-        @input="onInputName"
-      >
-      <div tabindex="0" class="card compact dropdown-content z-[10] shadow bg-base-100 rounded-box w-full mt-1 border">
-        <div class="card-body">
-          <span class="card-title text-sm">
-            Type to search people?
-          </span>
-          <div v-if="searchLoading" class="flex flex-row items-center space-x-2">
-            <span class="loading loading-spinner loading-xs text-accent" />
-            <span class="text-xs">
-              Loading...
-            </span>
-          </div>
-          <MessageError v-else-if="searchError" :error="searchError" />
-          <div v-else-if="searchResult">
-            <ul class="menu bg-base-200 rounded-box">
-              <li v-for="(item, index) in searchResult.results" :key="index">
-                <router-link :to="`${routes.PEOPLE.path}/${item.id}`">
-                  {{ item.name }}
-                </router-link>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
+    <PeopleSearch
+      :loading="searchLoading"
+      :error="searchError"
+      :results="searchData?.results"
+      @search="onSearch"
+    />
   </div>
   <div>
     <span class="text-lg font-bold">List of people:</span>
