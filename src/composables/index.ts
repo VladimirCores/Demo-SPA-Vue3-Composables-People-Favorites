@@ -7,7 +7,7 @@ import LocalKeys from '~/constants/localkeys.ts';
 import { debounce } from '~/utils/utilsTimer.ts';
 
 let peopleResult:IPeopleResult | undefined;
-const peopleFavorite:boolean[] = JSON.parse(localStorage.getItem(LocalKeys.FAVORITE) || '[]');
+const peopleFavorites:boolean[] = JSON.parse(localStorage.getItem(LocalKeys.FAVORITE) || '[]');
 
 const fetchPeople = (
   url: string,
@@ -25,7 +25,7 @@ const fetchPeople = (
         .then((result:IPeopleResult) => {
           const lastIndex = finalResult?.results.length || 0;
           result.results.forEach((item, index) => {
-            item.favorite = !!peopleFavorite[lastIndex + index];
+            item.favorite = !!peopleFavorites[lastIndex + index];
             // console.log('item.favorite', item.favorite);
           });
           if (!finalResult) {
@@ -36,7 +36,7 @@ const fetchPeople = (
           }
           if (onProgress) onProgress(result);
           if (result.next) return getPage(result.next);
-          else return finalResult;
+          return finalResult;
         });
     getPage(url)
       .then(resolve)
@@ -91,27 +91,28 @@ export function useSearch() {
 }
 
 export function useFavorite() {
-  const switchFavorite = (index:number, data:IPerson | undefined) => {
-    const item = data || peopleResult?.results[index];
+  const switchFavorite = (index:number, data?:IPerson | undefined) => {
+    const item = peopleResult?.results[index] || data;
     console.log('> useFavorite -> switchFavorite:', item);
     if (!item) return;
     item.favorite = !item.favorite;
-    peopleFavorite[index] = item.favorite;
-    localStorage.setItem(LocalKeys.FAVORITE, JSON.stringify(peopleFavorite));
+    peopleFavorites[index] = item.favorite;
+    localStorage.setItem(LocalKeys.FAVORITE, JSON.stringify(peopleFavorites));
   };
-  return { switchFavorite };
+  return { favorites: peopleFavorites, switchFavorite };
 }
 
 export function usePerson() {
   const fetchById = (id:number) => {
+    if (peopleResult?.results[id]) return Promise.resolve(peopleResult?.results[id]);
     if (personFetchController) { personFetchController.abort(); }
     personFetchController = new AbortController();
-
     return fetch(
-      `${import.meta.env.VITE_URL_PEOPLE}/${id}`,
+      `${import.meta.env.VITE_URL_PEOPLE}/${id + 1}`,
       {signal: personFetchController.signal})
       .then((resp) => resp.json())
-      .then((result) => (result.favorite = peopleFavorite[id], result));
+      .then((result) => (result.favorite = peopleFavorites[id], result))
+      .then((result) => (personFetchController = undefined, result));
   };
 
   onUnmounted(() => {

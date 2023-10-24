@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "eval $(grep '^SURGE_URL' .env) && surge ./dist $SURGE_URL"
   },
   "dependencies": {
     "vue": "^3.3.4",
@@ -32,6 +33,7 @@
     "stylelint-config-standard-scss": "^11.0.0",
     "tailwind-scrollbar": "^3.0.5",
     "tailwindcss": "^3.3.3",
+    "terser": "^5.22.0",
     "typescript": "^5.2.2",
     "vite": "^4.4.5",
     "vite-plugin-eslint": "^1.8.1",

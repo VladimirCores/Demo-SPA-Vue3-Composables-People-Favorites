@@ -11,30 +11,38 @@ const route = useRoute();
 const person = usePerson();
 const { switchFavorite } = useFavorite();
 const isLoading = ref(true);
-const error = ref(null);
-const data = ref<IPerson | undefined>();
+const error = ref<string | object | undefined>();
+const personData = ref<IPerson | undefined>();
 
-const getPersonId = computed<number>(() => parseInt(route.params.id as string));
-const getPersonKeys = computed<string[]>(() => Object.keys(data.value!));
+const getPersonId = computed<number>(() => parseInt(route.params.id as string) - 1);
+const getPersonKeys = computed<string[]>(() => Object.keys(personData.value!));
+const getPersonValue = (key:keyof IPerson) => personData.value![key];
 
 const fetchPerson = () => {
-  isLoading.value = true;
-  console.log('> PersonIdPage -> fetchPerson');
-  person.fetchById(getPersonId.value)
-    .then((result) => data.value = result)
-    .finally(() => isLoading.value = false);
+  if (getPersonId.value < 0) {
+    error.value = 'Wrong ID';
+  } else {
+    console.log('> PersonIdPage -> fetchPerson');
+    person.fetchById(getPersonId.value)
+      .then((result) => personData.value = result)
+      .catch((err) => error.value = err.toString())
+      .finally(() => isLoading.value = false);
+  }
 };
 
 const onFavorite = () => {
   console.log('> PersonIdPage -> onFavorite');
-  switchFavorite(getPersonId.value, data.value);
+  switchFavorite(getPersonId.value, personData.value);
 };
 
 onMounted(() => {
   fetchPerson();
 });
 
-watch(route, () => fetchPerson());
+watch(route, () => {
+  isLoading.value = true;
+  fetchPerson();
+});
 
 </script>
 
@@ -44,13 +52,13 @@ watch(route, () => fetchPerson());
   </div>
   <MessageError v-else-if="error" :error="error" />
   <div v-else class="flex flex-col justify-center w-full">
-    <div v-if="!data!.favorite" class="flex flex-row justify-end w-full space-x-2">
+    <div v-if="!personData!.favorite" class="flex flex-row justify-end w-full space-x-2">
       <span>Favorite</span>
       <label>
         <input
           type="checkbox"
           class="checkbox checkbox-sm"
-          :checked="data!.favorite"
+          :checked="personData!.favorite"
           @change="onFavorite"
         >
       </label>
@@ -69,7 +77,7 @@ watch(route, () => fetchPerson());
               {{ key }}
             </th>
             <th class="text-base-content">
-              {{ data![key] }}
+              {{ getPersonValue(key as keyof IPerson) }}
             </th>
           </tr>
         </tbody>
