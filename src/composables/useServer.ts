@@ -21,7 +21,7 @@ const fetchPages = (
             finalResult.next = pageResult.next;
             finalResult.results.push(...pageResult.results);
           }
-          // if (pageResult.next) return getPage(pageResult.next);
+          if (pageResult.next) return getPage(pageResult.next);
           return finalResult;
         });
     getPage(url)
