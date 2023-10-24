@@ -21,6 +21,7 @@ const onPeopleTableFavorite = (index:number) => {
   console.log('> PeoplePage -> onFavorite:', person);
   switchFavorite(person);
 };
+
 const onSearch = (text:string) => {
   console.log('> PeoplePage -> onSearch:', text);
   const query = text.length > 0 ? { search: text } : undefined;

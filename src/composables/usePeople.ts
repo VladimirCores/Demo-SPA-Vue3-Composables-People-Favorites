@@ -17,7 +17,8 @@ const loading:IPeopleLoading = reactive<IPeopleLoading>({
   },
 });
 
-// const loading = reactive<IPeopleLoading>();
+const list = ref<IPerson[] | undefined>(peopleState.data?.results);
+const error = ref(null);
 
 const getPersonIdFromUrl = (url:string) => {
   const parts = url.split('/');
@@ -25,9 +26,6 @@ const getPersonIdFromUrl = (url:string) => {
 };
 
 export default () => {
-  const list = ref<IPerson[] | undefined>(peopleState.data?.results);
-  const error = ref(null);
-
   peopleFetchController = undefined;
 
   const fetchPeople = () => {
