@@ -6,13 +6,34 @@ import LocalKeys from '~/constants/localkeys.ts';
 
 import { debounce } from '~/utils/utilsTimer.ts';
 
+const getPersonIdFromUrl = (url:string) => {
+  const parts = url.split('/');
+  return parseInt(parts[parts.length - 2]);
+};
+
+const setupPersonsID = (list:IPerson[]) => {
+  list.forEach((item:IPerson) => {
+    item.id = getPersonIdFromUrl(item.url);
+  });
+  return list;
+};
+
+const getFavoriteItemLocalKey = (id:number) => LocalKeys.PERSON_BY_ID.replace('$id', id.toString());
+const getPersonFromLocalStorage = (id:number) => {
+  const localKey = getFavoriteItemLocalKey(id);
+  const personRaw = localStorage.getItem(localKey)!;
+  console.log('> useFavorite -> getPersonFromLocalStorage:', localKey);
+  return personRaw ? JSON.parse(personRaw) as IPerson : null;
+};
+const getFilteredFavorites = () => peopleFavorites.reduce((acc:IPerson[], curr, index) => (curr && acc.push(getPersonFromLocalStorage(index)!), acc), []);
+
 let peopleResult:IPeopleResult | undefined;
 const peopleFavorites:boolean[] = JSON.parse(localStorage.getItem(LocalKeys.FAVORITE) || '[]');
 
-const fetchPeople = (
+const fetchPages = (
   url: string,
   controller: AbortController,
-  onProgress?: (data:IPeopleResult) => void,
+  onProgress?: (pageResult:IPeopleResult, finalResult:IPeopleResult | undefined) => void,
 ):Promise<IPeopleResult | undefined> => {
   let finalResult:IPeopleResult | undefined;
   return new Promise((resolve, reject) => {
@@ -22,20 +43,15 @@ const fetchPeople = (
           if (!res.ok) throw new Error(res.statusText);
           return res.json() as Promise<IPeopleResult>;
         })
-        .then((result:IPeopleResult) => {
-          const lastIndex = finalResult?.results.length || 0;
-          result.results.forEach((item, index) => {
-            item.favorite = !!peopleFavorites[lastIndex + index];
-            // console.log('item.favorite', item.favorite);
-          });
+        .then((pageResult:IPeopleResult) => {
+          if (onProgress) onProgress(pageResult, finalResult);
           if (!finalResult) {
-            finalResult = result as IPeopleResult;
+            finalResult = pageResult as IPeopleResult;
           } else {
-            finalResult.next = result.next;
-            finalResult.results.push(...result.results);
+            finalResult.next = pageResult.next;
+            finalResult.results.push(...pageResult.results);
           }
-          if (onProgress) onProgress(result);
-          if (result.next) return getPage(result.next);
+          if (pageResult.next) return getPage(pageResult.next);
           return finalResult;
         });
     getPage(url)
@@ -43,6 +59,7 @@ const fetchPeople = (
       .catch((error) => error.code !== 20 && reject(error) || resolve(undefined)); // name === 'AbortError'
   });
 };
+
 
 let searchFetchController:AbortController | undefined;
 let peopleFetchController:AbortController | undefined;
@@ -63,20 +80,16 @@ export function useSearch() {
     error.value = null;
     if ((text as string).length === 0) return;
     loading.value = true;
-    fetchPeople(
+    fetchPages(
       `${import.meta.env.VITE_URL_PEOPLE}/?search=${text}`,
       searchFetchController,
     )
-      .then((data) => {
-        console.log('> useSearch -> data:', data);
-        if (!data) return;
-        const cutFrom = import.meta.env.VITE_URL_PEOPLE.length;
-        data.results?.forEach((item:IPerson) => {
-          item.id = item.url.substring(cutFrom);
-          console.log('> \titem.id:', item.id);
-          return item;
-        });
-        result.value = data;
+      .then((finalResult) => {
+        console.log('> useSearch -> data:', finalResult);
+        if (!finalResult) return;
+        const { results } = finalResult;
+        if (results) setupPersonsID(results);
+        result.value = finalResult;
         loading.value = false;
         searchFetchController = undefined;
       })
@@ -90,16 +103,38 @@ export function useSearch() {
   return { result, error, loading, search };
 }
 
-export function useFavorite() {
+export function useFavorites() {
+
+
+  const list = ref<IPerson[]>([]);
+
+  console.log('> useFavorite -> list:', list.value);
+
   const switchFavorite = (index:number, data?:IPerson | undefined) => {
-    const item = peopleResult?.results[index] || data;
-    console.log('> useFavorite -> switchFavorite:', item);
-    if (!item) return;
-    item.favorite = !item.favorite;
-    peopleFavorites[index] = item.favorite;
+    const person = peopleResult?.results[index] || data || getPersonFromLocalStorage(index);
+    console.log('> useFavorite -> switchFavorite:', index, person);
+    if (!person) return;
+    const wasFavorite = person.favorite;
+    console.log('> \t wasFavorite =', wasFavorite);
+    person.favorite = !wasFavorite;
+    peopleFavorites[index] = person.favorite;
     localStorage.setItem(LocalKeys.FAVORITE, JSON.stringify(peopleFavorites));
+    const itemLocalKey = getFavoriteItemLocalKey(index);
+    if (wasFavorite) {
+      localStorage.removeItem(itemLocalKey);
+    } else {
+      localStorage.setItem(itemLocalKey, JSON.stringify(person));
+    }
+    list.value = getFilteredFavorites();
+    console.log('> \t list.value =', list.value);
   };
-  return { favorites: peopleFavorites, switchFavorite };
+
+  onMounted(() => {
+    console.log('> useFavorite -> onMounted');
+    list.value = getFilteredFavorites();
+  });
+
+  return { list, switchFavorite };
 }
 
 export function usePerson() {
@@ -141,12 +176,21 @@ export function usePeople() {
     if (loading.isProgress) {
       if (peopleFetchController) { peopleFetchController.abort(); }
       peopleFetchController = new AbortController();
-      fetchPeople(
+      fetchPages(
         import.meta.env.VITE_URL_PEOPLE,
         peopleFetchController,
-        (result) => {
+        (pageResult, finalResult) => {
+          console.log('> usePeople -> fetchPages - onProgress =', pageResult);
+          const lastIndex = finalResult?.results?.length || 0;
+          pageResult.results.forEach((item, index) => {
+            const position = lastIndex + index;
+            item.position = position;
+            item.favorite = peopleFavorites[position];
+            item.id = getPersonIdFromUrl(item.url);
+            console.log('\t' + item.name + ' position =', position, '|', item.id);
+          });
           loading.progress.current += 1;
-          loading.progress.final = Math.ceil(result.count / result.results.length);
+          loading.progress.final = Math.ceil(pageResult.count / pageResult.results.length);
         },
       )
         .then((result) => { peopleResult = result; })

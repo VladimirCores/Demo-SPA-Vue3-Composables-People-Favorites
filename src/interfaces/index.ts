@@ -1,5 +1,6 @@
 export interface IPerson {
-  id: string | undefined
+  id?: number
+  position?: number
   name: string
   height: string
   mass: string
@@ -16,13 +17,13 @@ export interface IPerson {
   created: string
   edited: string
   url: string
-  favorite: boolean | undefined
+  favorite?: boolean
 }
 
 export interface IPeopleResult {
   count: number
-  next: string
-  previous: string
+  next: string | null
+  previous: string | null
   results: IPerson[]
 }
 

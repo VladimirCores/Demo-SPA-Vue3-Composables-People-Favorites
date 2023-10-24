@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 
-import { useFavorite, usePeople, useSearch } from '~/composables';
+import { useFavorites, usePeople, useSearch } from '~/composables';
 
 import routes from '~/constants/routes.ts';
 
@@ -11,7 +11,7 @@ import PeopleTable from '~/components/pages/people/PeopleTable.vue';
 
 const router = useRouter();
 const { list, error, loading } = usePeople();
-const { switchFavorite } = useFavorite();
+const { switchFavorite } = useFavorites();
 const { search, result: searchResult, loading: searchLoading, error: searchError } = useSearch();
 
 const onPeopleTableFavorite = (index:number) => {
@@ -52,7 +52,7 @@ const onInputPeopleName = (event:Event) => {
           <div v-else-if="searchResult">
             <ul class="menu bg-base-200 rounded-box">
               <li v-for="(item, index) in searchResult.results" :key="index">
-                <router-link :to="`${routes.PEOPLE.path}${item.id}`">
+                <router-link :to="`${routes.PEOPLE.path}/${item.id}`">
                   {{ item.name }}
                 </router-link>
               </li>

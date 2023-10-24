@@ -2,14 +2,14 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { useFavorite, usePerson } from '~/composables';
+import { useFavorites, usePerson } from '~/composables';
 import { IPerson } from '~/interfaces';
 
 import MessageError from '~/components/message/MessageError.vue';
 
 const route = useRoute();
 const person = usePerson();
-const { switchFavorite } = useFavorite();
+const { switchFavorite } = useFavorites();
 const isLoading = ref(true);
 const error = ref<string | object | undefined>();
 const personData = ref<IPerson | undefined>();

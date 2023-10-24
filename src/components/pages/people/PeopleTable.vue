@@ -30,7 +30,7 @@ const onFavorite = (event:Event) => {
       </tr>
     </thead>
     <tbody class="text-neutral">
-      <tr v-for="(item, index) in people" :key="index">
+      <tr v-for="(item, index) in people" :key="item.name">
         <th>{{ index + 1 }}</th>
         <th>{{ item.name }}</th>
         <th>{{ item.height }}</th>

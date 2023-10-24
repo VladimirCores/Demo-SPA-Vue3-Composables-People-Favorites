@@ -1,9 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { useFavorites } from '~/composables';
 
-const counter = ref(4);
+import PeopleTable from '~/components/pages/people/PeopleTable.vue';
+
+const { list, switchFavorite } = useFavorites();
+const onFavorite = (index:number) => {
+  const person = list.value[index];
+  console.log('> FavoritePage -> onFavorite:', index, person);
+  switchFavorite(person.position!);
+};
 </script>
 
 <template>
-  Hello {{ counter }}
+  <PeopleTable :people="list" @favorite="onFavorite" />
 </template>
