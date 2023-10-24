@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
 import routes, { IRoute } from '~/constants/routes.ts';
@@ -11,21 +10,24 @@ const possibleRoutes = [
 ];
 
 const currentRoute = useRoute();
-const isRouteNotCurrent = ({ path }: IRoute) => path !== currentRoute.path;
-const visibleRoutes = computed(() => possibleRoutes.filter(isRouteNotCurrent));
+const isRouteCurrent = ({ path }: IRoute) => path === currentRoute.path;
 </script>
 
 <template>
   <div class="[&>*:not(:last-child)]:mr-2">
-    <router-link
-      v-for="route in visibleRoutes"
+    <template
+      v-for="route in possibleRoutes"
       :key="route.path"
-      :disabled="isRouteNotCurrent(route)"
-      :to="route.path"
-      class="link"
     >
-      <span>{{ route.name }}</span>
-    </router-link>
+      <span v-if="isRouteCurrent(route)">{{ route.name }}</span>
+      <router-link
+        v-else
+        :to="route.path"
+        class="link"
+      >
+        <span>{{ route.name }}</span>
+      </router-link>
+    </template>
   </div>
 </template>
 
