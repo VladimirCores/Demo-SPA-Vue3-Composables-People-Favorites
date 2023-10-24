@@ -28,7 +28,7 @@ const onInputName = () => {
   const value = domInput.value;
   const query = value.length > 0 ? { search: value } : undefined;
   router.replace({ ...router.currentRoute.value, query });
-
+  search(value);
 };
 
 onMounted(() => {
