@@ -11,7 +11,7 @@ import MessageError from '~/components/message/MessageError.vue';
 defineProps<{
   results?: IPerson[],
   loading: boolean,
-  error?: string,
+  error?: string | undefined,
 }>();
 
 const emit = defineEmits<{

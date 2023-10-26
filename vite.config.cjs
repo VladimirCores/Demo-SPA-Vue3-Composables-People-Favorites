@@ -12,10 +12,10 @@ export default defineConfig({
     },
   },
   plugins: [vue(), eslint()],
-  // build: {
-  //   minify: 'esbuild',
-  // },
-  // esbuild: {
-  //   drop: ['console', 'debugger'],
-  // },
+  build: {
+    minify: 'esbuild',
+  },
+  esbuild: {
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+  },
 });

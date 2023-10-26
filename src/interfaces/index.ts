@@ -1,5 +1,5 @@
 export interface IPeopleState {
-  data: IPeopleData | undefined;
+  data: IPeopleData;
   favorites: boolean[];
 }
 

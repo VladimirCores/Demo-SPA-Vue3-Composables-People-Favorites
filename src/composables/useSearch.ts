@@ -13,7 +13,7 @@ let searchFetchController:AbortController | undefined;
 
 export default () => {
   const data = ref<IPeopleData | undefined>();
-  const error = ref(undefined);
+  const error = ref<string | undefined>(undefined);
   const loading = ref<boolean>(false);
 
   searchFetchController = undefined;

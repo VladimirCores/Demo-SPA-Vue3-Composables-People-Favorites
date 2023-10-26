@@ -6,7 +6,7 @@ import LocalKeys from '~/constants/localkeys.ts';
 
 import { peopleState } from './states';
 
-const { favorites: peopleFavorites } = peopleState;
+const { favorites: peopleFavorites, data: peopleData } = peopleState;
 
 const getFavoriteItemLocalKey = (id:number) => LocalKeys.PERSON_BY_ID.replace('$id', id.toString());
 
@@ -31,7 +31,12 @@ export default () => {
     const wasFavorite = person.favorite;
     console.log('> \t wasFavorite =', wasFavorite);
     person.favorite = !wasFavorite;
-    peopleFavorites[person.id!] = !wasFavorite;
+    peopleFavorites[person.id!] = person.favorite;
+    if (!person.position) {
+      const loadedPerson = peopleData?.results.find((p) => p.id === person.id);
+      console.log('> \t find loaded person =', loadedPerson);
+      if (loadedPerson) loadedPerson.favorite = person.favorite;
+    }
     localStorage.setItem(LocalKeys.FAVORITE, JSON.stringify(peopleFavorites));
     const itemLocalKey = getFavoriteItemLocalKey(person.id!);
     if (wasFavorite) {
