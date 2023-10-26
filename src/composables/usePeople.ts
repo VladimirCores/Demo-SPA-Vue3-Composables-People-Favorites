@@ -32,8 +32,10 @@ export default () => {
     peopleFetchController = new AbortController();
     loading.isProgress = true;
     error.value = null;
-    server.fetchPages(
-      import.meta.env.VITE_URL_PEOPLE,
+    const url =  peopleState.data.next
+      ? peopleState.data.next
+      : import.meta.env.VITE_URL_PEOPLE;
+    server.fetchPages(url,
       peopleFetchController,
       (pageResult, finalResult) => {
         console.log('> usePeople -> fetchPages - onProgress =', pageResult, peopleState.favorites);
@@ -44,16 +46,17 @@ export default () => {
           item.favorite = peopleState.favorites[item.id];
           // console.log('\t' + item.name + ' position =', position, '|', item.id);
         });
+        peopleState.data.next = pageResult.next;
         peopleState.data.count = pageResult.count;
         peopleState.data.results.push(...pageResult.results);
-        loading.progress.current += 1;
         loading.progress.final = Math.ceil(pageResult.count / pageResult.results.length);
+        loading.progress.current = parseInt(pageResult.next?.split('=')[1] || `${loading.progress.current}`);
         list.value = peopleState.data?.results;
       },
     )
-      .catch((err) => error.value = err)
+      .then(() => loading.isProgress = false)
+      .catch((err) => error.value = err.toString())
       .finally(() => {
-        loading.isProgress = false;
         peopleFetchController = undefined;
       });
   };

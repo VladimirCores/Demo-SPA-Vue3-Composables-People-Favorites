@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { useFavorites, usePeople, useSearch } from '~/composables';
@@ -15,6 +15,8 @@ const { switchFavorite } = useFavorites();
 const { search, data: searchData, loading: searchLoading, error: searchError } = useSearch();
 
 const domInputName = ref<HTMLInputElement | null>(null);
+
+const isLoadingNotComplete = computed(() => loading.progress.current !== loading.progress.final);
 
 const onPeopleTableFavorite = (index:number) => {
   const person = list.value![index];
@@ -35,7 +37,7 @@ onMounted(() => {
     domInputName.value!.value = searchText;
     search(searchText);
   }
-  if (!list.value?.length && !loading.isProgress) {
+  if (isLoadingNotComplete.value && (!loading.isProgress || error.value)) {
     console.log('> PeoplePage -> fetchPeople');
     fetchPeople();
   }
@@ -55,7 +57,7 @@ onMounted(() => {
   <div>
     <span class="text-lg font-bold">List of people:</span>
   </div>
-  <PeopleLoading v-if="loading.isProgress" :loading="loading" class="py-2" />
+  <PeopleLoading v-if="isLoadingNotComplete" :loading="loading" class="py-2" />
   <MessageError v-if="error" :error="error" class="mx-auto" />
   <div v-if="loading.progress.current > 1" class="scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thin scrollbar-thumb-neutral-200 scrollbar-track-neutral-100 overflow-y-scroll">
     <PeopleTable :key="list.length" :people="list" @favorite="onPeopleTableFavorite" />
