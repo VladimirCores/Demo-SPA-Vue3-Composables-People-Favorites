@@ -49,7 +49,7 @@ export default () => {
         peopleState.data.next = pageResult.next;
         peopleState.data.count = pageResult.count;
         peopleState.data.results.push(...pageResult.results);
-        loading.progress.final = Math.ceil(pageResult.count / pageResult.results.length);
+        loading.progress.final = Math.ceil(pageResult.count / 10);
         loading.progress.current = parseInt(pageResult.next?.split('=')[1] || `${loading.progress.current}`);
         list.value = peopleState.data?.results;
       },
