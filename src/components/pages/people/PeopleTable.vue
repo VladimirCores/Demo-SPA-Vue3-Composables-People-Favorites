@@ -51,3 +51,4 @@ const onFavorite = (event:Event) => {
     </tbody>
   </table>
 </template>
+

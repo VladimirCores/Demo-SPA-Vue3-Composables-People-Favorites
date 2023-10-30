@@ -37,9 +37,9 @@ export default () => {
       : import.meta.env.VITE_URL_PEOPLE;
     server.fetchPages(url,
       peopleFetchController,
-      (pageResult, finalResult) => {
+      (pageResult) => {
         console.log('> usePeople -> fetchPages - onProgress =', pageResult, peopleState.favorites);
-        const lastIndex = finalResult?.results?.length || 0;
+        const lastIndex = peopleState.data?.results.length || 0;
         pageResult.results.forEach((item, index) => {
           item.position = lastIndex + index;
           item.id = getPersonIdFromUrl(item.url);

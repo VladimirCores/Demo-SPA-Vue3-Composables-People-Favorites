@@ -31,6 +31,11 @@ const onSearch = (text:string) => {
   search(text);
 };
 
+const onRestart = () => {
+  console.log('> PeoplePage -> onRestart');
+  fetchPeople();
+};
+
 onMounted(() => {
   const searchText = router.currentRoute.value.query.search?.toString() || '';
   if (searchText.length > 0 && domInputName.value) {
@@ -57,8 +62,12 @@ onMounted(() => {
   <div>
     <span class="text-lg font-bold">List of people:</span>
   </div>
-  <PeopleLoading v-if="isLoadingNotComplete" :loading="loading" class="py-2" />
-  <MessageError v-if="error" :error="error" class="mx-auto" />
+  <PeopleLoading v-if="isLoadingNotComplete && !error" :loading="loading" class="py-2" />
+  <MessageError v-if="error" :error="error" class="mx-auto">
+    <button class="btn btn-xs" @click="onRestart">
+      Restart from last page
+    </button>
+  </MessageError>
   <div v-if="loading.progress.current > 1" class="scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar scrollbar-thin scrollbar-thumb-neutral-200 scrollbar-track-neutral-100 overflow-y-scroll">
     <PeopleTable :key="list.length" :people="list" @favorite="onPeopleTableFavorite" />
   </div>
